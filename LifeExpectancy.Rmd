@@ -1,0 +1,464 @@
+---
+title: "Stats Project"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+data <- read.csv("/Users/niharikatoom/Downloads/Life Expectancy Data.csv", header=TRUE, stringsAsFactors = FALSE)
+head(data)
+```
+```{r}
+nrow(data)
+```
+```{r}
+summary(data)
+```
+```{r} 
+library(purrr)
+library(tidyr)
+library(ggplot2)
+
+data %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_boxplot()
+```
+```{r}
+library(purrr)
+library(tidyr)
+library(ggplot2)
+
+data %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+```{r}
+data1 <- data  
+data1$Adult.Mortality[is.na(data1$Adult.Mortality)] <- median(data1$Adult.Mortality, na.rm = TRUE) 
+data1$Alcohol[is.na(data1$Alcohol)] <- mean(data1$Alcohol, na.rm = TRUE)
+data1$BMI[is.na(data1$BMI)] <- mean(data1$BMI, na.rm = TRUE)   
+data1
+data1$Diphtheria[is.na(data1$Diphtheria)] <- median(data1$Diphtheria, na.rm = TRUE)
+data1$GDP[is.na(data1$GDP)] <- median(data1$GDP, na.rm = TRUE)
+data1$Hepatitis.B[is.na(data1$Hepatitis.B)] <- median(data1$Hepatitis.B, na.rm = TRUE)
+data1$HIV.AIDS[is.na(data1$HIV.AIDS)] <- median(data1$HIV.AIDS, na.rm = TRUE)
+data1$Income.composition.of.resources[is.na(data1$Income.composition.of.resources)] <- median(data1$Income.composition.of.resources, na.rm = TRUE)
+data1$infant.deaths[is.na(data1$infant.deaths)] <- median(data1$infant.deaths, na.rm = TRUE)
+data1$Life.expectancy[is.na(data1$Life.expectancy)] <- median(data1$Life.expectancy, na.rm = TRUE)
+data1$Measles[is.na(data1$Measles)] <- median(data1$Measles, na.rm = TRUE)
+data1$percentage.expenditure[is.na(data1$percentage.expenditure)] <- median(data1$percentage.expenditure, na.rm = TRUE)
+data1$Polio[is.na(data1$Polio)] <- median(data1$Polio, na.rm = TRUE)
+data1$Population[is.na(data1$Population)] <- median(data1$Population, na.rm = TRUE)
+data1$Schooling[is.na(data1$Schooling)] <- median(data1$Schooling, na.rm = TRUE)
+data1$thinness..1.19.years[is.na(data1$thinness..1.19.years)] <- median(data1$thinness..1.19.years, na.rm = TRUE)
+data1$thinness.5.9.years[is.na(data1$thinness.5.9.years)] <- median(data1$thinness.5.9.years, na.rm = TRUE)
+data1$Total.expenditure[is.na(data1$Total.expenditure)] <- median(data1$Total.expenditure, na.rm = TRUE)
+data1$under.five.deaths[is.na(data1$under.five.deaths)] <- median(data1$under.five.deaths, na.rm = TRUE)
+data1$Year[is.na(data1$Year)] <- median(data1$Year, na.rm = TRUE)
+```
+```{r}
+colSums(is.na(data1))
+```
+```{r}
+drop <- c("Country")
+newdf = data1[,!(names(data1) %in% drop)]
+```
+```{r}
+newdf$log.GDP = log(newdf$GDP)
+newdf$log.HIV.AIDS = log(newdf$HIV.AIDS)
+newdf$log.Population = log(newdf$Population)
+```
+
+
+```{r}
+shapiro.test(data1$Life.expectancy)
+shapiro.test(data1$Adult.Mortality)
+shapiro.test(data1$Alcohol)
+shapiro.test(data1$percentage.expenditure)
+shapiro.test(data1$BMI)
+shapiro.test(data1$under.five.deaths)
+shapiro.test(data1$Total.expenditure)
+shapiro.test(newdf$log.HIV.AIDS)
+shapiro.test(newdf$log.GDP)
+shapiro.test(newdf$log.Population)
+shapiro.test(data1$thinness..1.19.years)
+shapiro.test(data1$thinness.5.9.years)
+shapiro.test(data1$Income.composition.of.resources)
+shapiro.test(data1$Schooling)
+```
+```{r}
+library(dplyr)
+findata <- newdf %>% 
+                          select(-GDP,-HIV.AIDS,-Population) %>%
+                          mutate(Hepatitis.B = ifelse(Hepatitis.B < 90, "<90% Covered", ">=90% Covered"),
+                                 Polio = ifelse(Polio < 90, "<90% Covered", ">=90% Covered"),
+                                 Diphtheria = ifelse(Diphtheria < 90, "<90% Covered", ">=90% Covered"), 
+                                 Status= as.factor(Status),
+                                 Hepatitis.B = as.factor(Hepatitis.B),
+                                 Polio = as.factor(Polio),
+                                 Diphtheria = as.factor(Diphtheria))
+
+str(findata)
+
+```
+```{r}
+colSums(is.na(findata))
+```
+
+```{r}
+colSums(is.na(newdf))
+```
+
+```{r}
+numd1 <- (data1 %>% 
+                    select_if(is.numeric))
+```
+
+```{r}
+data(numd1)
+corr <- round(cor(numd1), 1)
+head(corr[, 1:6])
+```
+```{r}
+library(ggcorrplot)
+p.mat <- cor_pmat(numd1)
+head(p.mat[, 1:4])
+```
+```{r}
+ggcorrplot(corr)
+```
+```{r}
+numd2 <- (findata %>% 
+                    select_if(is.numeric))
+```
+```{r}
+data(numd2)
+corr <- round(cor(numd2), 1)
+head(corr[, 1:6])
+```
+```{r}
+ggcorrplot(corr)
+```
+```{r}
+library(ggcorrplot)
+p.mat <- cor_pmat(numd2)
+head(p.mat[, 1:4])
+```
+```{r}
+#REMOVE
+data_cor <- cor(numd1[ , colnames(numd1) != "Life.expectancy"],  # Calculate correlations
+                numd1$Life.expectancy)
+data_cor
+```
+```{r}
+numd2 <- (findata %>% 
+                    select_if(is.numeric))
+```
+```{r}
+#REMOVE
+data_cor <- cor(numd2[ , colnames(numd2) != "Life.expectancy"],  # Calculate correlations
+                numd2$Life.expectancy)
+data_cor
+```
+
+```{r}
+cor(findata$log.GDP,findata$Life.expectancy)
+cor(findata$log.HIV.AIDS,findata$Life.expectancy)
+cor(findata$log.Population,findata$Life.expectancy)
+```
+```{r}
+data2 <- dplyr::filter(findata, Year=="2015")
+head(data2)
+```
+```{r}
+library(ggpubr)
+ggscatter(findata, x = "Adult.Mortality", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 500
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+library(ggpubr)
+ggscatter(data2, x = "Adult.Mortality", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 300
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+
+```{r}
+ggscatter(findata, x = "Income.composition.of.resources", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 0
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(data2, x = "Income.composition.of.resources", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 0
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(findata, x = "Schooling", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 3
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(data2, x = "Schooling", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 3
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(findata, x = "log.GDP", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 1
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(data2, x = "log.GDP", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 3
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(findata, x = "log.HIV.AIDS", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 2
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(data2, x = "log.HIV.AIDS", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 0
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(findata, x = "BMI", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 3
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+ggscatter(data2, x = "BMI", y = "Life.expectancy", add = "reg.line") +
+ stat_cor(
+   aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  label.x = 0
+)
+#> `geom_smooth()` using formula 'y ~ x'
+```
+```{r}
+plot(Life.expectancy ~ Polio, data=findata)
+```
+```{r}
+plot(Life.expectancy ~ Polio, data=data2)
+```
+```{r}
+plot(Life.expectancy ~ Diphtheria, data=findata)
+```
+```{r}
+plot(Life.expectancy ~ Diphtheria, data=data2)
+```
+
+```{r}
+counts <- table(findata$Status)
+barplot(counts, main="Development Status")
+```
+```{r}
+counts <- table(findata$Diphtheria)
+barplot(counts, main="Diphtheria Coverage")
+```
+```{r}
+counts <- table(findata$Polio)
+barplot(counts, main="Polio Coverage")
+```
+```{r}
+counts <- table(findata$Hepatitis.B)
+barplot(counts, main="Hepatitis.B Coverage")
+```
+
+```{r}
+library(ltm)
+biserial.cor(findata$Life.expectancy , findata$Polio)
+biserial.cor(findata$Life.expectancy , findata$Diphtheria)
+biserial.cor(findata$Life.expectancy , findata$Hepatitis.B)
+biserial.cor(findata$Life.expectancy , findata$Status)
+biserial.cor(findata$Adult.Mortality , findata$Polio)
+biserial.cor(findata$log.HIV.AIDS , findata$Polio)
+biserial.cor(findata$Income.composition.of.resources , findata$Polio)
+```
+```{r}
+#defining categories
+Developed = (findata$Status == "Developed"); Developing = (findata$Status == "Developing")
+#comma syntax
+t.test(findata$Life.expectancy[Developed], findata$Life.expectancy[Developing], mu = 0,
+alternative = "two.sided", paired = FALSE)
+```
+```{r}
+#defining categories
+less.than.90= (findata$Diphtheria == "<90% Covered"); more.and.equal.90 = (findata$Diphtheria == ">=90% Covered")
+#comma syntax
+t.test(findata$Life.expectancy[less.than.90], findata$Life.expectancy[more.and.equal.90], mu = 0,
+alternative = "two.sided", paired = FALSE)
+```
+```{r}
+#defining categories
+less.than.90= (findata$Polio == "<90% Covered"); more.and.equal.90 = (findata$Polio == ">=90% Covered")
+#comma syntax
+t.test(findata$Life.expectancy[less.than.90], findata$Life.expectancy[more.and.equal.90], mu = 0,
+alternative = "two.sided", paired = FALSE)
+``` 
+```{r}
+#defining categories
+less.than.90= (findata$Hepatitis.B == "<90% Covered"); more.and.equal.90 = (findata$Hepatitis.B == ">=90% Covered")
+#comma syntax
+t.test(findata$Life.expectancy[less.than.90], findata$Life.expectancy[more.and.equal.90], mu = 0,
+alternative = "two.sided", paired = FALSE)
+``` 
+```{r}
+model1 = lm(Life.expectancy ~ Adult.Mortality + Schooling + Income.composition.of.resources + log.HIV.AIDS + BMI + log.GDP + Polio + Diphtheria, data = data2)
+#print model summary
+summary(model1)
+```
+```{r}
+model2 = lm(Life.expectancy ~ Adult.Mortality + Income.composition.of.resources + log.HIV.AIDS + BMI + log.GDP + Polio + Diphtheria, data = data2)
+#print model summary removed schooling
+summary(model2)
+```
+```{r}
+model3 = lm(Life.expectancy ~ Adult.Mortality + Schooling + Income.composition.of.resources + log.HIV.AIDS + log.GDP + Polio + Diphtheria, data = data2)
+#print model summary remove bmi
+summary(model3)
+```
+```{r}
+model4 = lm(Life.expectancy ~ Adult.Mortality + Schooling + Income.composition.of.resources + log.HIV.AIDS + BMI + Polio + Diphtheria, data = data2)
+#print model summary remove gdp
+summary(model4)
+```
+```{r}
+model5 = lm(Life.expectancy ~ Adult.Mortality + Schooling + Income.composition.of.resources + log.HIV.AIDS + BMI + log.GDP + Diphtheria, data = data2)
+#print model summary remove polio
+summary(model5)
+```
+```{r}
+model6 = lm(Life.expectancy ~ Adult.Mortality + Schooling + Income.composition.of.resources + log.HIV.AIDS + BMI + log.GDP + Polio, data = data2)
+#print model summary remove diphetheria
+summary(model6)
+```
+```{r}
+model7 = lm(Life.expectancy ~ Adult.Mortality +  Income.composition.of.resources + log.HIV.AIDS, data = data2)
+#print model summary with AMH
+summary(model7)
+```
+```{r}
+model8 = lm(Life.expectancy ~ Adult.Mortality + Income.composition.of.resources + log.HIV.AIDS + Diphtheria, data = data2)
+#print model summary remove BMI AND DIPHTHERIA
+summary(model8)
+```
+```{r}
+model9 = lm(Life.expectancy ~ Adult.Mortality +  Income.composition.of.resources + log.HIV.AIDS  + Polio, data = data2)
+#print model summary
+summary(model9)
+```
+```{r}
+model10 = lm(Life.expectancy ~ Adult.Mortality +  Income.composition.of.resources + log.HIV.AIDS  + Polio + Diphtheria, data = data2)
+#print model summary
+summary(model10)
+```
+```{r}
+qqnorm(resid(model9),
+pch= 21,
+main = "Q-Q PLOT")
+qqline(resid(model9))
+```
+```{r}
+hist(model9$residuals, breaks = 20)
+```
+```{r}
+shapiro.test(model9$residuals)
+```
+
+```{r}
+library(ggfortify)
+autoplot(model9)
+```
+```{r}
+plot(model9,which=1)
+```
+```{r}
+plot(model9,which=2)
+```
+```{r}
+mean(model9$residuals)
+```
+```{r}
+library(lmtest)
+dwtest(model9)
+```
+```{r}
+plot(model9,which=3)
+```
+```{r}
+plot(model9,which=5)
+```
+
+```{r}
+model1 = lm(Life.expectancy ~ Schooling, data = findata)
+#print model summary
+summary(model1)
+```
+```{r}
+modelall <- lm(formula = Life.expectancy ~., data = findata)
+```
+```{r}
+backward <- step(modelall, direction = "backward")
+```
+
+```{r}
+library(olsrr)
+```
+```{r}
+model5 <- lm(formula = Life.expectancy ~ Status + Adult.Mortality + infant.deaths + Alcohol + percentage.expenditure + Hepatitis.B + Measles + BMI + under.five.deaths + Polio + Total.expenditure + Diphtheria + thinness..1.19.years + thinness.5.9.years + Income.composition.of.resources + Schooling + log.GDP + log.HIV.AIDS + log.Population, data = findata)
+summary(model5)
+```
+```{r}
+model5 <- lm(formula = Life.expectancy ~ Status + Adult.Mortality + infant.deaths + Alcohol + percentage.expenditure + Hepatitis.B + Measles + BMI + under.five.deaths + Polio + Total.expenditure + Diphtheria + thinness..1.19.years + thinness.5.9.years + Income.composition.of.resources + Schooling + log.GDP + log.HIV.AIDS + log.Population, data = data2)
+summary(model5)
+```
+```{r}
+model5 <- lm(formula = Life.expectancy ~ Adult.Mortality + Income.composition.of.resources + log.HIV.AIDS, data = data2)
+summary(model5)
+```
+```{r}
+fullmodel <- lm(Life.expectancy ~ Status + Adult.Mortality + infant.deaths + Alcohol + percentage.expenditure + Hepatitis.B + Measles + BMI + under.five.deaths + Polio + Total.expenditure + Diphtheria + thinness..1.19.years + thinness.5.9.years + Income.composition.of.resources + Schooling + log.GDP + log.HIV.AIDS + log.Population, data = findata)
+step(fullmodel, direction = "backward", trace=FALSE )
+```
